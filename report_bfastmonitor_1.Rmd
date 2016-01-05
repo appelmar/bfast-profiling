@@ -1,0 +1,61 @@
+---
+title: "Profiling Report: bfmSpatial"
+output: html_document
+---
+
+This report discusses the main results of profiling the bfastmonitor function using randomly generated timeseries.
+
+
+
+## Experiment Details
+
+The script to rerun analyses is shown below. 
+
+```{r, eval=F}
+library(bfast)
+freq = 365
+n = 10000
+
+# simple linear trend
+mu = 0.5
+breakidx = n*0.6
+trend1 = (1:n-n/2) / (7*n)
+trend2 = 0.12-(1:n-n/2) / (100*n)
+trend = c(trend1[1:breakidx],trend2[(breakidx+1):n])
+seasonal = 0.1*sin(2*pi*(1:n)/freq)
+noise = rnorm(n,0,0.08)
+evi.random <- mu + trend + seasonal + noise
+series = ts(evi.random,start = c(2001,1), frequency = freq)
+plot(series)
+
+bfastmonitor(series, start=c(2015, 1)) 
+
+
+Rprof(NULL)
+Rprof(filename="random_bfastmonitor_1.out",interval=0.01,line.profiling = F)
+bfastmonitor(series, start=c(2010, 1), order=3,type="Rec-CUSUM") 
+Rprof(NULL)
+res = summaryRprof("random_bfastmonitor_1.out")
+res$by.total
+```
+
+
+
+
+## Results
+
+
+
+
+
+
+
+
+## Notes
+Given computation times highly depend on the used hardware. In all experiments, a desktop workstation running Ubuntu 14.04 with an Intel Xeon 2.67GHz quad core CPU and 6 GB main memory has been used. Further system information can be found below. To simplify profiling multicore support of R operations was turned off. 
+
+
+```{r}
+suppressPackageStartupMessages(library(bfastSpatial,quietly=T))
+sessionInfo()
+``` 

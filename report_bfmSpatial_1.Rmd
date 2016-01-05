@@ -1,0 +1,96 @@
+---
+title: "Profiling Report: bfmSpatial"
+output: html_document
+---
+
+This report discusses the main results of profiling the bfmSpatial function according to the [tutorial](http://www.loicdutrieux.com/bfastSpatial/).  
+
+
+
+## Experiment Details
+
+The script to rerun analyses is shown below. 
+
+```{r, eval=F}
+library(bfastSpatial)
+data(tura)
+
+Rprof(NULL)
+Rprof(filename="tura_prof_stack_1.out",interval=0.5,line.profiling = F)
+bfmSpatial(tura, start=c(2009, 1), order=1) 
+Rprof(NULL)
+res = summaryRprof("tura_prof_stack_1.out")
+res$by.total
+```
+
+
+
+
+## Results
+
+
+The table below show the R profiler output.
+```{r}
+res = summaryRprof("tura_prof_stack_1.out")
+res$by.total
+``` 
+
+
+
+
+
+
+Below, you can find additional conclusions how optimization of particular bfast functions would affect overall computation times of `bfmSpatial()`
+```{r, echo=F}
+res = summaryRprof("tura_prof_stack_1.out")
+
+speedup = 2
+c = 1/speedup
+
+totalspeedup <- function(fname, s=speedup) {
+  c = 1/s
+  lambda = res$by.total[paste("\"",fname,"\"",sep=""),]$total.time / res$by.total["\"bfmSpatial\"",]$total.time
+  return(round(1/(1-lambda*(1-c)),digits = 2))
+  #return(1/(1-(c*res$by.total[paste("\"",fname,"\"",sep=""),]$total.pct/100)))
+}
+
+functionspeedup <- function(fname, S=2) {
+  lambda = res$by.total[paste("\"",fname,"\"",sep=""),]$total.time / res$by.total["\"bfmSpatial\"",]$total.time
+  res = lambda/ ( (1/S) - 1 + lambda )
+  if (res < 0) return(NA)
+  return(round(res,digits=2))
+  #return(round(1/(1+(-1 + 1/S)/(lambda)),digits=2))
+}
+
+#totalspeedup.bfastts = 1/(1-(c*res$by.total["\"bfastts\"",]$total.pct/100))
+#totalspeedup.bfastmonitor= 1/(1-(c*res$by.total["\"bfastmonitor\"",]$total.pct/100))
+
+```
+
+* Speeding up `bfastmonitor()` by a factor of `r speedup` would have sped up `bfmSpatial()` by a factor of `r totalspeedup("bfastmonitor")`
+* Speeding up `bfastts()` by a factor of `r speedup` would have sped up `bfmSpatial()` by a factor of `r totalspeedup("bfastts")`
+* Speeding up `bfastpp()` by a factor of `r speedup` would have sped up `bfmSpatial()` by a factor of `r totalspeedup("bfastpp")`
+* Speeding up `efp()` by a factor of `r 10` would have sped up `bfmSpatial()` by a factor of `r totalspeedup("efp",10)`
+* Speeding up `recresid()` by a factor of `r 10` would have sped up `bfmSpatial()` by a factor of `r totalspeedup("recresid",10)`
+
+To speed up `bfmSpatial()` by a factor of 2, you could do either
+
+* speed up `bfastmonitor()` by a factor of `r functionspeedup("bfastmonitor",2)`,
+* speed up `bfastts()` by a factor of `r functionspeedup("bfastts",2)`,
+* speed up `bfastpp()` by a factor of `r functionspeedup("bfastpp",2)`,
+* speed up `efp()` by a factor of `r functionspeedup("efp",2)`, or
+* speed up `recresid()` by a factor of `r functionspeedup("recresid",2)`.
+
+
+
+
+
+
+## Notes
+Given computation times highly depend on the used hardware. In all experiments, a desktop workstation running Ubuntu 14.04 with an Intel Xeon 2.67GHz quad core CPU and 6 GB main memory has been used. Further system information can be found below. To simplify profiling multicore support of R operations was turned off. 
+
+
+```{r}
+suppressPackageStartupMessages(library(bfastSpatial,quietly=T))
+sessionInfo()
+``` 

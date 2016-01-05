@@ -4,3 +4,4 @@ library(devtools)
 install_github('dutri001/bfastSpatial')
 
 install_github("rstudio/profvis")
+install_github("hadley/lineprof")
