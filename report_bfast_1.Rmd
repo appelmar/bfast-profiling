@@ -1,9 +1,9 @@
 ---
-title: "Profiling Report: bfastmonitor"
+title: "Profiling Report: bfast"
 output: html_document
 ---
-
-This report discusses the main results of profiling the bfastmonitor function using randomly generated timeseries.
+  
+This report discusses the main results of profiling the bfast function using randomly generated timeseries.
 
 
 
@@ -14,7 +14,7 @@ The script to rerun analyses is shown below.
 ```{r, eval=F}
 library(bfast)
 freq = 24
-n = 10000
+n = 1000
 
 # simple linear trend
 breakidx = n*0.6
@@ -25,15 +25,14 @@ seasonal = 0.05*sin(2*pi*(1:n)/freq)
 noise = rnorm(n,0,0.05)
 evi.random <- trend + seasonal + noise
 series = ts(evi.random,start = c(1900,1), frequency = freq)
-plot(series)
+#plot(series)
 
-#bfast(series,season="harmonic", max.iter=1,breaks=1)
 
 Rprof(NULL)
-Rprof(filename="random_bfastmonitor_1.out",interval=0.01,line.profiling = F)
-bfastmonitor(series, start=c(2000, 1),type="OLS-CUSUM", order=3, verbose=TRUE) 
+Rprof(filename="random_bfast_1.out",interval=0.01,line.profiling = F)
+bfast(series,season="harmonic", max.iter=1,breaks=1)
 Rprof(NULL)
-res = summaryRprof("random_bfastmonitor_1.out")
+res = summaryRprof("random_bfast_1.out")
 res$by.total
 ```
 
@@ -42,9 +41,10 @@ res$by.total
 
 ## Results
 
+
 The table below show the R profiler output.
 ```{r}
-res = summaryRprof("random_bfastmonitor_1.out")
+res = summaryRprof("random_bfast_1.out")
 res$by.total
 ``` 
 
@@ -53,20 +53,20 @@ res$by.total
 
 Below, you can find additional conclusions how optimization of particular functions would affect overall computation times of `bfast()`
 ```{r, echo=F}
-res = summaryRprof("random_bfastmonitor_1.out")
+res = summaryRprof("random_bfast_1.out")
 
 speedup = 2
 c = 1/speedup
 
 totalspeedup <- function(fname, s=speedup) {
   c = 1/s
-  lambda = res$by.total[paste("\"",fname,"\"",sep=""),]$total.time / res$by.total["\"bfastmonitor\"",]$total.time
+  lambda = res$by.total[paste("\"",fname,"\"",sep=""),]$total.time / res$by.total["\"bfast\"",]$total.time
   return(round(1/(1-lambda*(1-c)),digits = 2))
   #return(1/(1-(c*res$by.total[paste("\"",fname,"\"",sep=""),]$total.pct/100)))
 }
 
 functionspeedup <- function(fname, S=2) {
-  lambda = res$by.total[paste("\"",fname,"\"",sep=""),]$total.time / res$by.total["\"bfastmonitor\"",]$total.time
+  lambda = res$by.total[paste("\"",fname,"\"",sep=""),]$total.time / res$by.total["\"bfast\"",]$total.time
   res = lambda/ ( (1/S) - 1 + lambda )
   if (res < 0) return(NA)
   return(round(res,digits=2))
@@ -78,10 +78,8 @@ functionspeedup <- function(fname, S=2) {
 
 ```
 
-* Speeding up `efp()` by a factor of `r 2` would have sped up `bfastmonitor()` by a factor of `r totalspeedup("efp",2)`
-* Speeding up `recresid()` by a factor of `r 2` would have sped up `bfastmonitor()` by a factor of `r totalspeedup("recresid",2)`
-* Speeding up `bfastpp()` by a factor of `r 2` would have sped up `bfastmonitor()` by a factor of `r totalspeedup("bfastpp",2)`
-
+* Speeding up `recresid()` by a factor of `r 2` would have sped up `bfast()` by a factor of `r totalspeedup("recresid",2)`
+* Speeding up `recresid()` by a factor of `r 10` would have sped up `bfast()` by a factor of `r totalspeedup("recresid",10)`
 
 
 ## Notes
