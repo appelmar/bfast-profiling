@@ -3,7 +3,7 @@ title: "Profiling Report: bfastmonitor"
 output: html_document
 ---
 
-This report discusses the main results of profiling the bfastmonitor function using randomly generated timeseries.
+This report discusses the main results of profiling the bfastmonitor function using the (repeated) som timeseries from the `bfast` package.
 
 
 
@@ -11,7 +11,7 @@ This report discusses the main results of profiling the bfastmonitor function us
 
 The script to rerun analyses is shown below. 
 
-```{r, eval=F}
+```{r, eval=T,message=FALSE,warning=F,error=F}
 library(bfast)
 library(zoo)
 k = 100
@@ -19,22 +19,18 @@ som2 = data.frame(Time = c(som$Time,max(som$Time)+  (1:(length(som$Time)*(k-1)))
                   NDVI.a = rep(som$NDVI.a,k),
                   NDVI.b = rep(som$NDVI.b,k))
                   
-
-
-
-
-
 NDVIa <- as.ts(zoo(som2$NDVI.a, som2$Time))
-plot(NDVIa)
+#plot(NDVIa)
+
 ## apply the bfast monitor function on the data
-## start of the monitoring period is c(2010, 13)
+## start of the monitoring period is c(2434, 13)
 ## and the ROC method is used as a method to automatically identify a stable history
 Rprof(NULL)
-Rprof(filename="mona_bfastmonitor_1.out",interval=0.005,line.profiling = F)
-mona <- bfastmonitor(NDVIa, start = c(2010, 13), history = "all", type ="OLS-MOSUM")
+Rprof(filename="som_bfastmonitor_1.out",interval=0.005,line.profiling = F)
+mona <- bfastmonitor(NDVIa, start = c(2434, 13), history = "all", type ="OLS-MOSUM")
 Rprof(NULL)
-res = summaryRprof("mona_bfastmonitor_1.out")
-res$by.total
+res = summaryRprof("som_bfastmonitor_1.out")
+#res$by.total
 #plot(mona)
 ```
 
@@ -45,7 +41,7 @@ res$by.total
 
 The table below show the R profiler output.
 ```{r}
-res = summaryRprof("mona_bfastmonitor_1.out")
+res = summaryRprof("som_bfastmonitor_1.out")
 res$by.total
 ``` 
 
@@ -54,7 +50,7 @@ res$by.total
 
 Below, you can find additional conclusions how optimization of particular functions would affect overall computation times of `bfast()`
 ```{r, echo=F}
-res = summaryRprof("mona_bfastmonitor_1.out")
+res = summaryRprof("som_bfastmonitor_1.out")
 
 speedup = 2
 c = 1/speedup
